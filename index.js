@@ -1,10 +1,9 @@
 
 
-
 const state = {
     users: [],
     posts: [],
-    data:[],
+    data: [],
     _data: [],
     pageInfo: {
         totalItems: 0,
@@ -13,10 +12,11 @@ const state = {
         limit: 10,
         hasPrevPage: false,
         hasNextPage: false,
-    }
+    },
+    orderBy: "A-Z"
 }
 
- const usersJson = async ()=> {
+const usersJson = async () => {
     try {
         const result = await fetch("https://jsonplaceholder.typicode.com/users");
         const users = await result.json();
@@ -24,26 +24,26 @@ const state = {
     } catch (error) {
         console.log(error)
     }
- }
+}
 
- const postJson = async ()=> {
+const postJson = async () => {
     try {
-       const result = await fetch("https://jsonplaceholder.typicode.com/posts") 
-       const posts = await result.json();
-       state.posts = posts
+        const result = await fetch("https://jsonplaceholder.typicode.com/posts")
+        const posts = await result.json();
+        state.posts = posts
     } catch (error) {
         console.log(error)
     }
 }
 
 const formatData = () => {
-   state._data = state.posts.map(post => {
-    const user = state.users.find((user) => user.id == post.userId);
-    return {...post, author : user.name }
-   })
+    state._data = state.posts.map(post => {
+        const user = state.users.find((user) => user.id == post.userId);
+        return { ...post, author: user.name }
+    })
 }
 
-const applyPageIndex = () =>{
+const applyPageIndex = () => {
     state.pageInfo.totalItems = state._data.length;
     state.pageInfo.totalPages = Math.floor(state.pageInfo.totalItems / state.pageInfo.limit);
     state.pageInfo.hasPrevPage = state.pageInfo.currentPage > 1;
@@ -52,15 +52,37 @@ const applyPageIndex = () =>{
     const startIndex = state.pageInfo.limit * (state.pageInfo.currentPage - 1);
 
     state.data = [...state._data].splice(startIndex, state.pageInfo.limit)
-} 
+}
+
+const applySorting = () => {
+    switch (state.orderBy) {
+        case "A-Z":
+            state.data.sort((a, b) => a.title < b.title ? -1 : 0);
+            break;
+        case "Z-A":
+            state.data.sort((a, b) => a.title > b.title ? 1 : 0);
+            break;
+        case "ID-ASC":
+            state.data.sort((a, b) => a.id - b.id);
+            break;
+        case "ID-DESC":
+            state.data.sort((a, b)=> b.id - a.id);
+            break;
+        default: 
+            state.data.sort((a,b)=> a.title < b.title ? -1 : 0);
+            break;
+        }
+}
 
 
-const init = async ()=> {
-     await usersJson();
-     await postJson();
-        formatData();
-        applyPageIndex(); 
-     console.log(state)
+const init = async () => {
+    await usersJson();
+    await postJson();
+    formatData();
+    applyPageIndex();
+    applySorting();
+    console.log(state)
+
 }
 
 init()
